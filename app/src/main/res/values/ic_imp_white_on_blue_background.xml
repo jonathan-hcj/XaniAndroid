@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_imp_blue_background">#202084</color>
+    <color name="ic_imp_dark_blue_background">#101042</color>
+    <color name="ic_imp_light_blue_background">#303042</color>
+
+</resources>
