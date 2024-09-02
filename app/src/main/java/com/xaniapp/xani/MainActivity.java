@@ -16,7 +16,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.xaniapp.xani.databinding.ActivityMainBinding;
 import com.xaniapp.xani.dataaccess.AppDatabase;
+import com.xaniapp.xani.entites.da.Post;
 import com.xaniapp.xani.entites.da.User;
+
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,25 +58,30 @@ public class MainActivity extends AppCompatActivity {
        var apiThread = new Thread(() -> {
 
             appDatabase = AppDatabase.getDatabase(this);
-            var   userDao = appDatabase.userDao();
+           var userDao = appDatabase.userDao();
+           var postDao = appDatabase.postDao();
 
-            String currentDBPath=getDatabasePath("xani.db").getAbsolutePath();
+           //String currentDBPath=getDatabasePath("xani.db").getAbsolutePath();
 
+            var user = new User();
+            user.u_id = 2;
+            user.u_username = "@grouchydouglas1";
 
-           var a = userDao.getAll();
-
-
-           var user = new User();
-            user.u_id=2;
-            user.u_username = "@grouchydouglas";
-
-            userDao.upsertData(user);
-
-            var x =     userDao.getUser(5);
-
-       var y =     userDao.getAll();
+            var d = userDao.upsertData(user);
+            var x = userDao.getUser(5);
+            var y = userDao.getAll();
 
 
+           var calendar =  Calendar.getInstance();
+           var post = new Post();
+           post.p_id = 3;
+           post.p_content = "All together";
+           post.p_datetime_created = calendar.getTime();
+           postDao.upsertData(post);
+
+           var allPosts = postDao.getAll();
+
+         //  appDatabase.query("")
 
         });
         apiThread.start();

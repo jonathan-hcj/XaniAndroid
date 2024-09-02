@@ -1,8 +1,11 @@
 package com.xaniapp.xani.entites.da;
 
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+
+import java.util.Date;
 
 @Entity(tableName = "post")
 public class Post {
@@ -12,10 +15,10 @@ public class Post {
     public int p_u_id;
     @ColumnInfo(name = "p_content")
     public String p_content;
-    //  @ColumnInfo(name = "p_datetime_created")
-    //  public Date p_datetime_created;
-    //  @ColumnInfo(name = "p_datetime_edited")
-    //  public Date p_datetime_edited;
+    @ColumnInfo(name = "p_datetime_created")
+    public @Nullable Date p_datetime_created;
+    @ColumnInfo(name = "p_datetime_edited")
+    public Date p_datetime_edited;
     @ColumnInfo(name = "p_ps_id")
     public int p_ps_id;
     @ColumnInfo(name = "p_id_quote_of")
