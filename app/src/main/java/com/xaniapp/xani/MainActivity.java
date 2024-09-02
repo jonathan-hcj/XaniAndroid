@@ -14,6 +14,7 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.xaniapp.xani.business.CryptographyBusiness;
 import com.xaniapp.xani.databinding.ActivityMainBinding;
 import com.xaniapp.xani.dataaccess.AppDatabase;
 import com.xaniapp.xani.entites.da.Post;
@@ -87,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         apiThread.start();
 
 
-
+      var encrypted =  CryptographyBusiness.getSHA256("FreeBeer");
 
 
 

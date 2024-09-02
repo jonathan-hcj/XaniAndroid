@@ -46,7 +46,7 @@ public class AuthenticateBusiness {
 
             var authenticateMessage = new AuthenticateMessage();
             authenticateMessage.u_id = 2;
-            authenticateMessage.u_password_hash = "a";
+            authenticateMessage.u_password_hash = "37023dfa13e7c584c259d5e383ff88c1f25e2b45403ecd5fe581132e7eb5c6ed";
 
             var authenticateResponse = sendToAPI(ApiAction.POST, "authorisation", null, authenticateMessage, AuthenticateResponse.class);
             if (authenticateResponse.success) {
