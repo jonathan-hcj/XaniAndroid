@@ -15,11 +15,14 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.xaniapp.xani.databinding.ActivityMainBinding;
+import com.xaniapp.xani.dataaccess.AppDatabase;
+import com.xaniapp.xani.entites.da.User;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
+    public static AppDatabase appDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +51,40 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+
+       var apiThread = new Thread(() -> {
+
+            appDatabase = AppDatabase.getDatabase(this);
+            var   userDao = appDatabase.userDao();
+
+            String currentDBPath=getDatabasePath("xani.db").getAbsolutePath();
+
+
+           var a = userDao.getAll();
+
+
+           var user = new User();
+            user.u_id=2;
+            user.u_username = "@grouchydouglas";
+
+            userDao.upsertData(user);
+
+            var x =     userDao.getUser(5);
+
+       var y =     userDao.getAll();
+
+
+
+        });
+        apiThread.start();
+
+
+
+
+
+
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

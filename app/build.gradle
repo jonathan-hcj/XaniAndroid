@@ -32,6 +32,12 @@ android {
 }
 
 dependencies {
+    def room_version = "2.6.1"
+
+    implementation libs.room.runtime
+    implementation libs.room.rxjava2
+    implementation libs.room.rxjava3
+    annotationProcessor "androidx.room:room-compiler:$room_version"
 
     implementation libs.appcompat
     implementation libs.material

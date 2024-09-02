@@ -31,17 +31,51 @@ public class AuthenticateBusiness {
     // private final static String baseUrl = "http://192.168.0.18:5138/api";
 
     public static void processLogin() {
-        processAuthenticate();
+
+        var startAuthenticate = processAuthenticate(result -> {
+            // Do something when download finished
+        });
     }
 
-    public static <T1> Result<?> sendToAPI(ApiAction action, String controller, String token, Object message, Class<?> classOfResponse) {
+    @NonNull
+    public static Result<Integer> processAuthenticate(final MyCallbackInterface callback) {
+
+        var result = new Result<Integer>();
+
+        var apiThread = new Thread(() -> {
+
+            var authenticateMessage = new AuthenticateMessage();
+            authenticateMessage.u_id = 2;
+            authenticateMessage.u_password_hash = "a";
+
+            var authenticateResponse = sendToAPI(ApiAction.POST, "authorisation", null, authenticateMessage, AuthenticateResponse.class);
+            if (authenticateResponse.success) {
+
+                var authenticate = (AuthenticateResponse) authenticateResponse.data;
+                var feedResponse = sendToAPI(ApiAction.GET, String.format("feed?u_id=%s", 2), authenticate.u_token, null, FeedResponse.class);
+                if (feedResponse.success) {
+
+                    var feed = (FeedResponse) feedResponse.data;
+                    for (var item : feed.f_items) {
+
+                    }
+                }
+            }
+            callback.onDownloadFinished(result);
+        });
+        apiThread.start();
+
+        return result;
+    }
+
+    //region "NET"
+
+    private static <T1> Result<?> sendToAPI(ApiAction action, String controller, String token, Object message, Class<?> classOfResponse) {
 
         var gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(Date.class, new DateDeserializer());
         var gson = gsonBuilder.create();
-
-        var sb = new StringBuilder();
-        var httpClient = HttpClientBuilder.create().build();//
+        var httpClient = HttpClientBuilder.create().build();
         var result = new Result<T1>();
 
         try {
@@ -69,11 +103,14 @@ public class AuthenticateBusiness {
                     if (token != null) {
                         postRequest.setHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
                     }
-                    postRequest.setEntity(new StringEntity(messageJson));
+                    if (messageJson != null) {
+                        postRequest.setEntity(new StringEntity(messageJson));
+                    }
 
                     response = httpClient.execute(postRequest);
                     break;
             }
+
 
             if (response == null) {
                 result.setFail("No response returned from the data service");
@@ -87,6 +124,8 @@ public class AuthenticateBusiness {
                     result.data = (T1) gson.fromJson(parsedPostResponse.data, classOfResponse);
                 }
             }
+
+            httpClient.close();
         }
         catch (Exception e1) {
             result.setFail(e1.getMessage());
@@ -95,7 +134,7 @@ public class AuthenticateBusiness {
         return result;
     }
 
-    public static Result<String> ReadHttpResponse (CloseableHttpResponse response) {
+    private static Result<String> ReadHttpResponse (CloseableHttpResponse response) {
 
         var result = new Result<String>();
         var sb = new StringBuilder();
@@ -126,34 +165,9 @@ public class AuthenticateBusiness {
         }
         return result;
     }
+    //endregion
 
-    @NonNull
-    public static Result processAuthenticate() {
-        var result = new Result<Integer>();
-
-        var apiThread = new Thread(() -> {
-
-            var authenticateMessage = new AuthenticateMessage();
-            authenticateMessage.u_id = 2;
-            authenticateMessage.u_password_hash = "a";
-
-            var authenticateResponse = sendToAPI(ApiAction.POST, "authorisation", null, authenticateMessage, AuthenticateResponse.class);
-            if (authenticateResponse.success) {
-
-                var authenticate = (AuthenticateResponse) authenticateResponse.data;
-                var feedResponse = sendToAPI(ApiAction.GET, String.format("feed?u_id=%s", 2), authenticate.u_token, null, FeedResponse.class);
-                //   var feedResponse = sendToAPI(ApiAction.GET, String.format("feed?u_id=%s", 2), null, null, FeedResponse.class);
-                if (feedResponse.success) {
-
-                    var feed = (FeedResponse) feedResponse.data;
-                    for (var item : feed.f_items) {
-
-                    }
-
-                }
-            }
-        });
-        apiThread.start();
-        return result;
+    public interface MyCallbackInterface{
+        void onDownloadFinished(Result<Integer> result);
     }
 }
