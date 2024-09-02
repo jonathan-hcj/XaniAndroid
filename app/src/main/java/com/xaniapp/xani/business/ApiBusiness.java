@@ -1,5 +1,7 @@
 package com.xaniapp.xani.business;
 
+import android.content.Context;
+
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpHeaders;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.methods.CloseableHttpResponse;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.methods.HttpGet;
@@ -16,7 +18,6 @@ import com.xaniapp.xani.entites.api.FeedResponse;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Date;
-import java.util.prefs.Preferences;
 
 public class ApiBusiness {
 
@@ -30,21 +31,21 @@ public class ApiBusiness {
         POST
     }
 
-    public static void aquireFeed() {
+    public static void aquireFeed(Context context) {
 
-        aquireFeedAsync(result -> {
+        aquireFeedAsync(context, result -> {
 
             var b = (FeedResponse) result.data;
             // Do something when download finished
         });
     }
 
-    public static void aquireFeedAsync(final MyCallbackInterface callback) {
+    public static void aquireFeedAsync(Context context, final MyCallbackInterface callback) {
 
-        var apiThread = new Thread(() -> {
+        final var apiThread = new Thread(() -> {
 
             var result = new Result<FeedResponse>();
-            var authenticated = checkAuthenticated();
+            var authenticated = checkAuthenticated(context);
             if (!authenticated.success) {
                 result.setFail(authenticated.errorMessage);
             }
@@ -66,19 +67,20 @@ public class ApiBusiness {
         apiThread.start();
     }
 
-    public static Result<Integer> checkAuthenticated() {
+    public static Result<Integer> checkAuthenticated(Context context) {
 
-        var result = new Result<Integer>();
+        final var result = new Result<Integer>();
 
         if (Authorisation.token == null) {
-            var authenticateMessage = new AuthenticateMessage();
+            final var authenticateMessage = new AuthenticateMessage();
+            final var datastore = DatastoreBusiness.getInstance(context);
 
-            authenticateMessage.username = "Death";
-            authenticateMessage.password_hash = "37023dfa13e7c584c259d5e383ff88c1f25e2b45403ecd5fe581132e7eb5c6ed";
+            authenticateMessage.username = datastore.getStringValue(DatastoreBusiness.Key.USERNAME);
+            authenticateMessage.password_hash = datastore.getStringValue(DatastoreBusiness.Key.HASH);
 
             var authenticateResponse = sendToAPI(ApiAction.POST, "authorisation", null, authenticateMessage, AuthenticateResponse.class);
             if (authenticateResponse.success) {
-                var authData = (AuthenticateResponse) authenticateResponse.data;
+                final var authData = (AuthenticateResponse) authenticateResponse.data;
                 Authorisation.id = authData.id;
                 Authorisation.token = authData.token;
             }
@@ -94,15 +96,15 @@ public class ApiBusiness {
 
     private static <T1> Result<?> sendToAPI(ApiAction action, String controller, String token, Object message, Class<?> classOfResponse) {
 
-        var gsonBuilder = new GsonBuilder();
+        final var gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(Date.class, new DateDeserializer());
-        var gson = gsonBuilder.create();
-        var httpClient = HttpClientBuilder.create().build();
-        var result = new Result<T1>();
+        final var gson = gsonBuilder.create();
+        final var httpClient = HttpClientBuilder.create().build();
+        final var result = new Result<T1>();
 
         try {
             /* encode the message */
-            var messageJson = message == null ? null : gson.toJson(message, message.getClass());
+            final var messageJson = message == null ? null : gson.toJson(message, message.getClass());
 
             /* create an execute the post */
             CloseableHttpResponse response = null;

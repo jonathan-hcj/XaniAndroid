@@ -7,6 +7,8 @@ import android.view.Menu;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.datastore.preferences.core.Preferences;
+import androidx.datastore.rxjava2.RxDataStore;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -15,6 +17,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.xaniapp.xani.business.CryptographyBusiness;
+import com.xaniapp.xani.business.DatastoreBusiness;
 import com.xaniapp.xani.databinding.ActivityMainBinding;
 import com.xaniapp.xani.dataaccess.AppDatabase;
 import com.xaniapp.xani.entites.da.Post;
@@ -27,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
     public static AppDatabase appDatabase;
+    RxDataStore<Preferences> dataStoreRX;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,9 +60,24 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-       var apiThread = new Thread(() -> {
+        /* this will be changed for a settings form eventually */
+        var datastore = DatastoreBusiness.getInstance(this);
 
-            appDatabase = AppDatabase.getDatabase(this);
+        var username = datastore.getStringValue(DatastoreBusiness.Key.USERNAME);
+        var hash = datastore.getStringValue(DatastoreBusiness.Key.HASH);
+        if (username == null) {
+            datastore.setStringValue(DatastoreBusiness.Key.USERNAME, "Death");
+        }
+
+        if (hash == null) {
+            var encrypted = CryptographyBusiness.getSHA256("FreeBeer");
+            datastore.setStringValue(DatastoreBusiness.Key.HASH, encrypted.data);
+        }
+
+
+        var apiThread = new Thread(() -> {
+
+           appDatabase = AppDatabase.getDatabase(this);
            var userDao = appDatabase.userDao();
            var postDao = appDatabase.postDao();
 
@@ -88,12 +107,11 @@ public class MainActivity extends AppCompatActivity {
         apiThread.start();
 
 
-      var encrypted =  CryptographyBusiness.getSHA256("FreeBeer");
+
 
 
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

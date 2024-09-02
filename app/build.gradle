@@ -39,6 +39,10 @@ dependencies {
     implementation libs.room.rxjava3
     annotationProcessor "androidx.room:room-compiler:$room_version"
 
+    implementation "androidx.datastore:datastore-preferences:1.1.1"
+    implementation "androidx.datastore:datastore-preferences-rxjava2:1.1.1"
+    implementation "androidx.datastore:datastore-preferences-rxjava3:1.1.1"
+
     implementation libs.appcompat
     implementation libs.material
     implementation libs.constraintlayout

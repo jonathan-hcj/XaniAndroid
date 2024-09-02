@@ -46,6 +46,6 @@ public class HomeFragment extends Fragment {
 
     private void processLogin() {
 
-        ApiBusiness.aquireFeed();
+        ApiBusiness.aquireFeed(getContext());
     }
 }
