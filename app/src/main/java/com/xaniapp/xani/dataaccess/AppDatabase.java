@@ -14,22 +14,22 @@ import com.xaniapp.xani.entites.da.User;
 @TypeConverters({Converters.class})
 public abstract class AppDatabase extends RoomDatabase {
 
-    private static volatile AppDatabase INSTANCE;
+    private static volatile AppDatabase appDatabase;
 
     public abstract UserDAO userDao();
     public abstract PostDAO postDao();
 
     public static AppDatabase getDatabase(final Context context) {
-        if (INSTANCE == null) {
+        if (appDatabase == null) {
             synchronized (AppDatabase.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
+                if (appDatabase == null) {
+                    appDatabase = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "xani.db")
                             .build();
                 }
             }
         }
-        return INSTANCE;
+        return appDatabase;
     }
 
 }

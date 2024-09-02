@@ -1,7 +1,5 @@
 package com.xaniapp.xani.business;
 
-import androidx.annotation.NonNull;
-
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpHeaders;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.methods.CloseableHttpResponse;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.methods.HttpGet;
@@ -18,52 +16,76 @@ import com.xaniapp.xani.entites.api.FeedResponse;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Date;
+import java.util.prefs.Preferences;
 
-public class AuthenticateBusiness {
+public class ApiBusiness {
 
+    /*
+        "http://192.168.0.18/Xani/api"
+        "http://192.168.0.18:5138/api"
+    */
+    private static final String baseUrl = "http://192.168.0.18/Xani/api";
     private enum ApiAction {
         GET,
         POST
     }
 
-    //http://192.168.0.18/Xani/api/feed?u_id=2
-    private final static String baseUrl = "http://192.168.0.18/Xani/api";
-    // private final static String baseUrl = "http://192.168.0.18:5138/api";
+    public static void aquireFeed() {
 
-    public static void processLogin() {
+        aquireFeedAsync(result -> {
 
-        var startAuthenticate = processAuthenticate(result -> {
+            var b = (FeedResponse) result.data;
             // Do something when download finished
         });
     }
 
-    @NonNull
-    public static Result<Integer> processAuthenticate(final MyCallbackInterface callback) {
-
-        var result = new Result<Integer>();
+    public static void aquireFeedAsync(final MyCallbackInterface callback) {
 
         var apiThread = new Thread(() -> {
 
-            var authenticateMessage = new AuthenticateMessage();
-            authenticateMessage.u_id = 2;
-            authenticateMessage.u_password_hash = "37023dfa13e7c584c259d5e383ff88c1f25e2b45403ecd5fe581132e7eb5c6ed";
+            var result = new Result<FeedResponse>();
+            var authenticated = checkAuthenticated();
+            if (!authenticated.success) {
+                result.setFail(authenticated.errorMessage);
+            }
+            else {
 
-            var authenticateResponse = sendToAPI(ApiAction.POST, "authorisation", null, authenticateMessage, AuthenticateResponse.class);
-            if (authenticateResponse.success) {
-
-                var authenticate = (AuthenticateResponse) authenticateResponse.data;
-                var feedResponse = sendToAPI(ApiAction.GET, String.format("feed?u_id=%s", 2), authenticate.u_token, null, FeedResponse.class);
+                var feedResponse = sendToAPI(ApiAction.GET, String.format("feed?u_id=%s", Authorisation.id), Authorisation.token, null, FeedResponse.class);
                 if (feedResponse.success) {
 
                     var feed = (FeedResponse) feedResponse.data;
                     for (var item : feed.f_items) {
 
                     }
+                    result.data = feed;
                 }
             }
+
             callback.onDownloadFinished(result);
         });
         apiThread.start();
+    }
+
+    public static Result<Integer> checkAuthenticated() {
+
+        var result = new Result<Integer>();
+
+        if (Authorisation.token == null) {
+            var authenticateMessage = new AuthenticateMessage();
+
+            authenticateMessage.username = "Death";
+            authenticateMessage.password_hash = "37023dfa13e7c584c259d5e383ff88c1f25e2b45403ecd5fe581132e7eb5c6ed";
+
+            var authenticateResponse = sendToAPI(ApiAction.POST, "authorisation", null, authenticateMessage, AuthenticateResponse.class);
+            if (authenticateResponse.success) {
+                var authData = (AuthenticateResponse) authenticateResponse.data;
+                Authorisation.id = authData.id;
+                Authorisation.token = authData.token;
+            }
+            else {
+                result.setFail(authenticateResponse.errorMessage);
+            }
+        }
 
         return result;
     }
@@ -144,6 +166,9 @@ public class AuthenticateBusiness {
         if (statusCode == 401) {
             result.setFail("Unauthorised");
         }
+        else if (statusCode == 404){
+            result.setFail("Not found");
+        }
         else {
 
             try {
@@ -167,7 +192,12 @@ public class AuthenticateBusiness {
     }
     //endregion
 
+    private static class Authorisation {
+        public static int id;
+        public static String token;
+    }
+
     public interface MyCallbackInterface{
-        void onDownloadFinished(Result<Integer> result);
+        void onDownloadFinished(Result<?> result);
     }
 }
