@@ -9,7 +9,8 @@ import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.client.m
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.entity.StringEntity;
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.impl.client.HttpClientBuilder;
 import com.google.gson.GsonBuilder;
-import com.xaniapp.xani.DateDeserializer;
+import com.xaniapp.xani.helpers.CallbackInterface;
+import com.xaniapp.xani.helpers.DateDeserializer;
 import com.xaniapp.xani.entites.Result;
 import com.xaniapp.xani.entites.api.AuthenticateMessage;
 import com.xaniapp.xani.entites.api.AuthenticateResponse;
@@ -31,16 +32,22 @@ public class ApiBusiness {
         POST
     }
 
-    public static void aquireFeed(Context context) {
+    public static void aquireFeed(Context context, CallbackInterface callback) {
 
         aquireFeedAsync(context, result -> {
 
-            var b = (FeedResponse) result.data;
-            // Do something when download finished
+            var feedResult = new Result<Integer>();
+            var mergeResult = DatabaseBusiness.mergeFeedFromApi(context, (FeedResponse)result.data);
+
+            if (!mergeResult.success) {
+                feedResult.setFail(mergeResult.errorMessage);
+            }
+
+            callback.onTaskFinished(result);
         });
     }
 
-    public static void aquireFeedAsync(Context context, final MyCallbackInterface callback) {
+    public static void aquireFeedAsync(Context context, final CallbackInterface callback) {
 
         final var apiThread = new Thread(() -> {
 
@@ -52,17 +59,15 @@ public class ApiBusiness {
             else {
 
                 var feedResponse = sendToAPI(ApiAction.GET, String.format("feed?u_id=%s", Authorisation.id), Authorisation.token, null, FeedResponse.class);
-                if (feedResponse.success) {
-
-                    var feed = (FeedResponse) feedResponse.data;
-                    for (var item : feed.f_items) {
-
-                    }
-                    result.data = feed;
+                if (!feedResponse.success) {
+                    result.setFail(feedResponse.errorMessage);
+                }
+                else {
+                    result.data = (FeedResponse) feedResponse.data;
                 }
             }
 
-            callback.onDownloadFinished(result);
+            callback.onTaskFinished(result);
         });
         apiThread.start();
     }
@@ -106,11 +111,11 @@ public class ApiBusiness {
             /* encode the message */
             final var messageJson = message == null ? null : gson.toJson(message, message.getClass());
 
-            /* create an execute the post */
+            /* create and execute the request */
             CloseableHttpResponse response = null;
 
-            switch(action)
-            {
+            switch(action) {
+
                 case GET:
                     var getRequest = new HttpGet(String.format("%s/%s", baseUrl, controller));
                     if (token != null) {
@@ -199,7 +204,7 @@ public class ApiBusiness {
         public static String token;
     }
 
-    public interface MyCallbackInterface{
-        void onDownloadFinished(Result<?> result);
-    }
+  //  public interface MyCallbackInterface{
+   //     void onDownloadFinished(Result<?> result);
+  //  }
 }

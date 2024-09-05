@@ -22,5 +22,8 @@ public interface UserDAO {
     void insertAll(User ...users);
 
     @Upsert
-    long upsertData(User user);
+    void upsertUsers(List<User> users);
+
+    @Upsert
+    long upsertUser(User user);
 }

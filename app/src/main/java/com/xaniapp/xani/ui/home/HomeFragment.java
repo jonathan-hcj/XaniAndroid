@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.xaniapp.xani.R;
 import com.xaniapp.xani.business.ApiBusiness;
+import com.xaniapp.xani.dataaccess.AppDatabase;
 import com.xaniapp.xani.databinding.FragmentHomeBinding;
 
 public class HomeFragment extends Fragment {
@@ -46,6 +47,14 @@ public class HomeFragment extends Fragment {
 
     private void processLogin() {
 
-        ApiBusiness.aquireFeed(getContext());
+        ApiBusiness.aquireFeed(getContext(), result -> {
+
+            var appDatabase = AppDatabase.getDatabase(getContext());
+            var userDao = appDatabase.userDao();
+            var postDao = appDatabase.postDao();
+
+            var allPosts = postDao.getAll();
+            var allUsers = userDao.getAll();
+        });
     }
 }

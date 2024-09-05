@@ -1,4 +1,4 @@
-package com.xaniapp.xani;
+package com.xaniapp.xani.helpers;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
